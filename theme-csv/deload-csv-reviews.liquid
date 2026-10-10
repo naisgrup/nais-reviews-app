@@ -109,6 +109,8 @@
   .apr__top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
   .apr__stars { letter-spacing: 2px; font-size: 15px; line-height: 1; color: color-mix(in srgb,var(--dl-graphite) 18%,transparent); }
   .apr__stars .is-on { color: var(--dl-graphite); }
+  .apr__rate { display: inline-flex; align-items: center; gap: 8px; }
+  .apr__score { font-size: 13px; line-height: 1; font-weight: 600; letter-spacing: .02em; color: var(--dl-graphite); font-variant-numeric: tabular-nums; }
   .apr__date { font-family: var(--dl-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--dl-slate); white-space: nowrap; }
   .apr__title { font-family: var(--dl-serif); font-size: 1.3rem; font-weight: 600; line-height: 1.25; letter-spacing: -.015em; margin: 0 0 8px; color: var(--dl-graphite); }
   .apr__text {
@@ -242,7 +244,7 @@
         tag = '<span class="apr__verified">' + esc(opt.unverifiedLabel) + '</span>';
       }
       return '<article class="apr__card' + (r.photo ? '' : ' apr__card--nophoto') + '" data-vpr-slide aria-roledescription="slide" aria-label="' + (idx + 1) + ' / ' + total + '">' + media +
-        '<div class="apr__body"><div class="apr__top"><span class="apr__stars" role="img" aria-label="' + esc(opt.tStars.replace('__R__', rating)) + '">' + stars + '</span>' +
+        '<div class="apr__body"><div class="apr__top"><span class="apr__rate"><span class="apr__stars" role="img" aria-label="' + esc(opt.tStars.replace('__R__', rating)) + '">' + stars + '</span><span class="apr__score" aria-hidden="true">' + rating + '/5</span></span>' +
         (opt.showDates && r.date ? '<time class="apr__date" datetime="' + isoDate(r.date) + '">' + esc(fmtDate(r.date)) + '</time>' : '') + '</div>' +
         (r.title ? '<h3 class="apr__title">' + esc(r.title) + '</h3>' : '') +
         '<p class="apr__text" data-vpr-text>' + esc(r.body).replace(/\n/g, '<br>') + '</p>' +
