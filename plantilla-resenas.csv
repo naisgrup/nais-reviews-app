@@ -1,0 +1,3 @@
+handle,author,review_date,rating,title,body,verified_purchase,photo_url
+cliente-001,Nombre A.,2026-10-10,5,Titulo de la resena,Texto de la resena,false,
+cliente-002,Nombre B.,2026-10-11,4,Otro titulo,Otro texto de resena,false,
