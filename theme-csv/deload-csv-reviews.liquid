@@ -1,0 +1,499 @@
+{%- comment -%}
+  Base — Reseñas desde CSV (página de producto).
+  Copia visual de «Reseñas con foto», pero sin metaobjects: lee un archivo CSV
+  (por defecto assets/nais-reviews.csv del propio tema, o la URL que se indique en
+  los ajustes) y muestra las filas cuyo «product» coincide con el handle del producto.
+  Columnas: product, author, review_date, rating, title, body, verified, photo
+  (opcional: status = approved/hidden para ocultar una fila sin borrarla).
+  Sin servidor: todo ocurre en el navegador del visitante.
+{%- endcomment -%}
+{%- liquid
+  assign bg = section.settings.bg_color
+  if bg == blank or bg == 'rgba(0,0,0,0)'
+    assign bg = 'var(--dl-paper)'
+  endif
+  assign csv_src = section.settings.csv_url
+  if csv_src == blank
+    assign csv_src = 'nais-reviews.csv' | asset_url
+  endif
+  assign t_stars = 'products.reviews.stars_aria' | t: rating: '__R__'
+  assign t_goto = 'general.slider.go_to_position' | t: index: '__I__', total: '__N__'
+  assign t_heading_default = 'products.reviews.photo_heading' | t
+-%}
+<section class="apr dl-anchor" hidden
+         {% if section.settings.anchor != blank %}id="{{ section.settings.anchor }}"{% endif %}
+         data-cvr
+         data-src="{{ csv_src }}"
+         data-product="{{ product.handle }}"
+         data-max="{{ section.settings.max_reviews }}"
+         data-show-dates="{{ section.settings.show_dates }}"
+         data-show-verified="{{ section.settings.show_verified }}"
+         data-verified-label="{{ section.settings.verified_label | escape }}"
+         data-unverified-label="{{ section.settings.unverified_label | escape }}"
+         data-more="{{ section.settings.read_more | escape }}"
+         data-less="{{ section.settings.read_less | escape }}"
+         data-t-stars="{{ t_stars | escape }}"
+         data-t-goto="{{ t_goto | escape }}"
+         data-autoplay="{{ section.settings.autoplay }}"
+         data-interval="{{ section.settings.interval }}"
+         style="--vpr-int: {{ section.settings.interval }}s; --apr-bg: {{ bg }}; padding-top: {{ section.settings.pad_top }}px; padding-bottom: {{ section.settings.pad_bottom }}px;"
+         aria-roledescription="carousel"
+         aria-labelledby="apr-h-{{ section.id }}">
+  <div class="dl-wrap">
+    <div class="apr__head">
+      {%- if section.settings.eyebrow != blank -%}<span class="dl-eyebrow">{{ section.settings.eyebrow }}</span>{%- endif -%}
+      <h2 class="dl-h2 apr__h" id="apr-h-{{ section.id }}">{{ section.settings.heading | default: t_heading_default }}</h2>
+    </div>
+
+    <div class="apr__track" id="apr-track-{{ section.id }}" data-vpr-track></div>
+
+    <div class="apr__controls">
+      <button type="button" class="apr__arrow" data-vpr-prev aria-controls="apr-track-{{ section.id }}" aria-label="{{ 'products.reviews.previous' | t }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <div class="apr__dots" data-vpr-dots></div>
+      <button type="button" class="apr__arrow" data-vpr-next aria-controls="apr-track-{{ section.id }}" aria-label="{{ 'products.reviews.next' | t }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+    </div>
+  </div>
+</section>
+
+<style>
+  .apr { background: var(--apr-bg); color: var(--dl-graphite); overflow: hidden; }
+  .apr[hidden] { display: none; }
+  .apr__head { text-align: center; max-width: 760px; margin: 0 auto clamp(28px, 3vw, 44px); }
+  .apr__h { font-size: clamp(30px, 4.4vw, 52px); margin: 12px 0 0; }
+  .apr__note { padding: 24px; text-align: center; font-size: 14px; color: var(--dl-slate); }
+
+  .apr__track {
+    --vpr-gap: 16px;
+    position: relative;
+    display: flex; align-items: stretch; gap: var(--vpr-gap);
+    overflow-x: auto; overflow-y: hidden;
+    scroll-snap-type: x mandatory; overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    margin-inline: calc(var(--dl-gutter) * -1);
+    padding: 4px var(--dl-gutter) 24px;
+    scroll-padding-inline: var(--dl-gutter);
+  }
+  .apr__track::-webkit-scrollbar { display: none; }
+  .apr__track.is-animating { scroll-snap-type: none; }
+
+  .apr__card {
+    flex: 0 0 86%;
+    scroll-snap-align: start;
+    display: flex; flex-direction: column;
+    background: var(--dl-mist);
+    border: 1px solid var(--dl-line);
+    border-radius: 16px; overflow: hidden;
+    box-shadow: var(--dl-shadow);
+  }
+
+  .apr__media { position: relative; aspect-ratio: 4 / 5; background: var(--dl-mist); overflow: hidden; }
+  .apr__blur {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; filter: blur(22px) saturate(1.05); transform: scale(1.25); opacity: 0.45;
+  }
+  .apr__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+
+  .apr__body { display: flex; flex-direction: column; flex: 1 1 auto; padding: 22px; min-width: 0; }
+  .apr__top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+  .apr__stars { letter-spacing: 2px; font-size: 15px; line-height: 1; color: color-mix(in srgb,var(--dl-graphite) 18%,transparent); }
+  .apr__stars .is-on { color: var(--dl-graphite); }
+  .apr__date { font-family: var(--dl-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--dl-slate); white-space: nowrap; }
+  .apr__title { font-family: var(--dl-serif); font-size: 1.3rem; font-weight: 600; line-height: 1.25; letter-spacing: -.015em; margin: 0 0 8px; color: var(--dl-graphite); }
+  .apr__text {
+    --vpr-lines: 6;
+    margin: 0 0 18px; font-size: 15.5px; line-height: 1.65; color: var(--dl-slate);
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: var(--vpr-lines); overflow: hidden;
+  }
+  .apr__card.is-open .apr__text { display: block; -webkit-line-clamp: unset; overflow: visible; }
+  .apr__more {
+    align-self: flex-start; margin: -10px 0 16px; padding: 4px 0;
+    background: none; border: 0; cursor: pointer; -webkit-appearance: none; appearance: none;
+    font: inherit; font-size: 14px; font-weight: 600; color: var(--dl-graphite);
+    text-decoration: underline; text-decoration-color: var(--dl-slate); text-decoration-thickness: 2px; text-underline-offset: 4px;
+  }
+  .apr__more[hidden] { display: none; }
+  .apr__who {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px;
+    margin-top: auto; padding-top: 14px; border-top: 1px solid var(--dl-line);
+  }
+  .apr__name { font-weight: 600; font-size: 15px; color: var(--dl-graphite); }
+  .apr__verified { display: inline-flex; align-items: center; gap: 7px; font-family: var(--dl-mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--dl-slate); }
+  .apr__vic { width: 18px; height: 18px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; background: var(--dl-graphite); color: var(--dl-paper); flex: none; }
+
+  .apr__controls { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 8px; }
+  .apr__arrow {
+    width: 46px; height: 46px; padding: 0; flex: 0 0 46px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: var(--dl-r-pill); border: 1px solid var(--dl-line-strong);
+    background: transparent; color: var(--dl-graphite); cursor: pointer;
+    -webkit-appearance: none; appearance: none;
+    transition: background var(--dl-dur) var(--dl-ease), color var(--dl-dur) var(--dl-ease), border-color var(--dl-dur) var(--dl-ease), transform .15s var(--dl-ease);
+  }
+  .apr__arrow svg { width: 20px; height: 20px; }
+  .apr__arrow:hover { background: var(--dl-graphite); color: var(--dl-paper); border-color: var(--dl-graphite); }
+  .apr__arrow:active { transform: scale(0.94); }
+  .apr__arrow:focus-visible, .apr__more:focus-visible { outline: 2px solid var(--dl-graphite); outline-offset: 3px; }
+
+  .apr__dots { display: flex; align-items: center; gap: 8px; }
+  .vpr__dot {
+    position: relative; overflow: hidden;
+    width: 8px; height: 8px; padding: 0; border: 0; border-radius: 999px; cursor: pointer;
+    background: color-mix(in srgb,var(--dl-graphite) 22%,transparent);
+    transition: width var(--dl-dur) var(--dl-ease), background var(--dl-dur) var(--dl-ease);
+  }
+  .vpr__dot::before { content: ""; position: absolute; inset: -12px -4px; }
+  .vpr__dot.is-active { width: 30px; background: color-mix(in srgb,var(--dl-graphite) 22%,transparent); }
+  .vpr__dot.is-active::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--dl-graphite); transform-origin: left center; transform: scaleX(1); }
+  .apr.is-playing .vpr__dot.is-active::after { animation: aprFill var(--vpr-int) linear both; }
+  @keyframes aprFill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+  @media (min-width: 750px) {
+    .apr__card { flex-basis: 78%; display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); }
+    .apr__card--nophoto { display: flex; }
+    .apr__media { aspect-ratio: auto; min-height: 420px; }
+    .apr__body { padding: 30px; }
+    .apr__text { --vpr-lines: 10; }
+    .apr__track { --vpr-gap: 20px; }
+  }
+  @media (min-width: 990px) {
+    .apr__track { margin-inline: 0; padding-inline: 0; scroll-padding-inline: 0; }
+    .apr__card { flex-basis: calc((100% - var(--vpr-gap)) / 2); }
+  }
+</style>
+
+<script>
+  (function () {
+    /* ---------- CSV ---------- */
+    function parseCsv(text) {
+      text = String(text).replace(/^﻿/, '');
+      var rows = [], row = [], field = '', inQ = false, i, c;
+      for (i = 0; i < text.length; i++) {
+        c = text[i];
+        if (inQ) {
+          if (c === '"') { if (text[i + 1] === '"') { field += '"'; i++; } else inQ = false; }
+          else field += c;
+        } else if (c === '"') inQ = true;
+        else if (c === ',') { row.push(field); field = ''; }
+        else if (c === '\n' || c === '\r') {
+          if (c === '\r' && text[i + 1] === '\n') i++;
+          row.push(field); field = '';
+          if (row.some(function (v) { return v !== ''; })) rows.push(row);
+          row = [];
+        } else field += c;
+      }
+      row.push(field);
+      if (row.some(function (v) { return v !== ''; })) rows.push(row);
+      if (!rows.length) return [];
+      var head = rows[0].map(function (h) { return h.trim().toLowerCase(); });
+      return rows.slice(1).map(function (r) {
+        var o = {}; head.forEach(function (h, k) { o[h] = r[k] == null ? '' : r[k]; }); return o;
+      });
+    }
+    var ALIAS = {
+      product: ['product', 'product_handle', 'handle', 'producto'],
+      author: ['author', 'reviewer_name', 'autor', 'name', 'nombre'],
+      rating: ['rating', 'estrellas', 'stars'],
+      title: ['title', 'titulo', 'título'],
+      body: ['body', 'texto', 'review', 'comentario'],
+      date: ['review_date', 'date', 'fecha'],
+      verified: ['verified', 'verified_purchase', 'verificada'],
+      photo: ['photo', 'foto', 'image'],
+      status: ['status', 'estado']
+    };
+    function get(row, key) {
+      var a = ALIAS[key];
+      for (var i = 0; i < a.length; i++) if (row[a[i]] != null && String(row[a[i]]).trim() !== '') return String(row[a[i]]).trim();
+      return '';
+    }
+    function parseDate(s) {
+      var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
+      if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+      m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(s);
+      if (m) return new Date(+m[3], +m[2] - 1, +m[1]);
+      return null;
+    }
+    function esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML; }
+    function fmtDate(d) { return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+    function isoDate(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+
+    function cardHtml(r, idx, total, opt) {
+      var rating = r.rating, stars = '';
+      for (var i = 1; i <= 5; i++) stars += '<span aria-hidden="true"' + (i <= rating ? ' class="is-on"' : '') + '>★</span>';
+      var media = r.photo
+        ? '<div class="apr__media"><img class="apr__blur" src="' + esc(r.photo) + '" alt="" aria-hidden="true" loading="lazy" width="80" height="80">' +
+          '<img class="apr__img" src="' + esc(r.photo) + '" alt="' + esc(r.author) + '" loading="lazy"></div>'
+        : '';
+      var tag = '';
+      if (r.verified && opt.showVerified) {
+        tag = '<span class="apr__verified"><span class="apr__vic" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>' + esc(opt.verifiedLabel) + '</span>';
+      } else if (!r.verified && opt.unverifiedLabel) {
+        tag = '<span class="apr__verified">' + esc(opt.unverifiedLabel) + '</span>';
+      }
+      return '<article class="apr__card' + (r.photo ? '' : ' apr__card--nophoto') + '" data-vpr-slide aria-roledescription="slide" aria-label="' + (idx + 1) + ' / ' + total + '">' + media +
+        '<div class="apr__body"><div class="apr__top"><span class="apr__stars" role="img" aria-label="' + esc(opt.tStars.replace('__R__', rating)) + '">' + stars + '</span>' +
+        (opt.showDates && r.date ? '<time class="apr__date" datetime="' + isoDate(r.date) + '">' + esc(fmtDate(r.date)) + '</time>' : '') + '</div>' +
+        (r.title ? '<h3 class="apr__title">' + esc(r.title) + '</h3>' : '') +
+        '<p class="apr__text" data-vpr-text>' + esc(r.body).replace(/\n/g, '<br>') + '</p>' +
+        '<button type="button" class="apr__more" data-vpr-more hidden aria-expanded="false" data-more="' + esc(opt.more) + '" data-less="' + esc(opt.less) + '">' + esc(opt.more) + '</button>' +
+        '<footer class="apr__who"><span class="apr__name">' + esc(r.author) + '</span>' + tag + '</footer></div></article>';
+    }
+
+    /* ---------- Carrusel (idéntico al de «Reseñas con foto») ---------- */
+    function init(root) {
+      if (!root || root.__vpr) return;
+      var track = root.querySelector('[data-vpr-track]');
+      var slides = track ? Array.prototype.slice.call(track.querySelectorAll('[data-vpr-slide]')) : [];
+      if (!slides.length) return;
+      root.__vpr = true;
+
+      var prevBtn = root.querySelector('[data-vpr-prev]');
+      var nextBtn = root.querySelector('[data-vpr-next]');
+      var dotsWrap = root.querySelector('[data-vpr-dots]');
+      var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var autoplay = root.getAttribute('data-autoplay') === 'true' && !reduce;
+      var interval = (parseFloat(root.getAttribute('data-interval')) || 6) * 1000;
+      var gotoTpl = root.getAttribute('data-t-goto') || '__I__ / __N__';
+
+      var stops = [0], idx = 0, timer = null, holdT = null, scrollT = null, anim = null;
+      var hover = false, touching = false, focusKb = false, openCard = false, hold = false;
+      var inView = false, pageOn = !document.hidden;
+
+      function pad() { return parseFloat(getComputedStyle(track).scrollPaddingLeft) || 0; }
+      function computeStops() {
+        var max = track.scrollWidth - track.clientWidth, p = pad(), s = [];
+        slides.forEach(function (el) {
+          var x = Math.max(0, Math.min(max, el.offsetLeft - p));
+          if (!s.length || Math.abs(x - s[s.length - 1]) > 4) s.push(x);
+        });
+        stops = s.length ? s : [0];
+      }
+      function nearest() {
+        var sl = track.scrollLeft, best = 0, bd = Infinity;
+        stops.forEach(function (s, i) { var d = Math.abs(s - sl); if (d < bd) { bd = d; best = i; } });
+        return best;
+      }
+      function buildDots() {
+        if (!dotsWrap) return;
+        dotsWrap.innerHTML = '';
+        stops.forEach(function (_, i) {
+          var b = document.createElement('button');
+          b.type = 'button'; b.className = 'vpr__dot';
+          b.setAttribute('aria-label', gotoTpl.replace('__I__', i + 1).replace('__N__', stops.length));
+          b.addEventListener('click', function () { userAction(); go(i); });
+          dotsWrap.appendChild(b);
+        });
+        paintDots();
+      }
+      function paintDots() {
+        if (!dotsWrap) return;
+        var d = dotsWrap.children;
+        for (var i = 0; i < d.length; i++) {
+          var on = i === idx;
+          d[i].classList.toggle('is-active', on);
+          if (on) d[i].setAttribute('aria-current', 'true'); else d[i].removeAttribute('aria-current');
+        }
+      }
+      function stopAnim() {
+        if (anim) { cancelAnimationFrame(anim.raf); anim = null; }
+        track.classList.remove('is-animating');
+      }
+      function animateTo(x) {
+        stopAnim();
+        var from = track.scrollLeft, dist = x - from;
+        if (Math.abs(dist) < 1) return;
+        if (reduce) { track.scrollLeft = x; return; }
+        var dur = Math.min(1000, 520 + Math.abs(dist) * 0.3), t0 = null;
+        track.classList.add('is-animating');
+        anim = {};
+        var step = function (t) {
+          if (t0 === null) t0 = t;
+          var p = Math.min(1, (t - t0) / dur);
+          var e = p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+          track.scrollLeft = from + dist * e;
+          if (p < 1) anim.raf = requestAnimationFrame(step);
+          else { anim = null; track.classList.remove('is-animating'); }
+        };
+        anim.raf = requestAnimationFrame(step);
+      }
+      function go(i) {
+        var n = stops.length;
+        idx = ((i % n) + n) % n;
+        animateTo(stops[idx]);
+        paintDots();
+        schedule();
+      }
+      function playing() { return autoplay && inView && pageOn && !hover && !touching && !focusKb && !openCard && !hold; }
+      function schedule() {
+        clearTimeout(timer); timer = null;
+        var on = playing();
+        root.classList.toggle('is-playing', on);
+        if (on) timer = setTimeout(function () { go(idx + 1); }, interval);
+      }
+      function userAction() {
+        hold = true;
+        clearTimeout(holdT);
+        holdT = setTimeout(function () { hold = false; schedule(); }, 8000);
+        schedule();
+      }
+
+      if (prevBtn) prevBtn.addEventListener('click', function () { userAction(); go(idx - 1); });
+      if (nextBtn) nextBtn.addEventListener('click', function () { userAction(); go(idx + 1); });
+
+      root.addEventListener('pointerenter', function (e) { if (e.pointerType === 'mouse') { hover = true; schedule(); } });
+      root.addEventListener('pointerleave', function (e) { if (e.pointerType === 'mouse') { hover = false; schedule(); } });
+      track.addEventListener('touchstart', function () { touching = true; stopAnim(); schedule(); }, { passive: true });
+      track.addEventListener('touchend', function () { touching = false; userAction(); }, { passive: true });
+      track.addEventListener('pointerdown', function () { stopAnim(); userAction(); });
+      track.addEventListener('wheel', function (e) { if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) { stopAnim(); userAction(); } }, { passive: true });
+      root.addEventListener('focusin', function (e) {
+        var kb = false;
+        try { kb = !!(e.target && e.target.matches(':focus-visible')); } catch (err) {}
+        focusKb = kb; schedule();
+      });
+      root.addEventListener('focusout', function () { focusKb = false; schedule(); });
+
+      track.addEventListener('scroll', function () {
+        clearTimeout(scrollT);
+        scrollT = setTimeout(function () {
+          if (anim) return;
+          var n = nearest();
+          if (n !== idx) { idx = n; paintDots(); schedule(); }
+        }, 120);
+      }, { passive: true });
+
+      function measure() {
+        slides.forEach(function (s) {
+          var t = s.querySelector('[data-vpr-text]'), b = s.querySelector('[data-vpr-more]');
+          if (!t || !b) return;
+          if (s.classList.contains('is-open')) { b.hidden = false; return; }
+          b.hidden = !(t.scrollHeight > t.clientHeight + 2);
+        });
+      }
+      slides.forEach(function (s) {
+        var b = s.querySelector('[data-vpr-more]');
+        if (!b) return;
+        b.addEventListener('click', function () {
+          var open = !s.classList.contains('is-open');
+          s.classList.toggle('is-open', open);
+          b.setAttribute('aria-expanded', open ? 'true' : 'false');
+          b.textContent = open ? b.getAttribute('data-less') : b.getAttribute('data-more');
+          openCard = !!track.querySelector('.apr__card.is-open');
+          userAction();
+          computeStops();
+        });
+      });
+
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function (es) {
+          inView = es[0].isIntersecting;
+          if (inView) slides.forEach(function (s) { s.querySelectorAll('img').forEach(function (im) { im.loading = 'eager'; }); });
+          schedule();
+        }, { threshold: 0.25 }).observe(root);
+      } else { inView = true; }
+      document.addEventListener('visibilitychange', function () { pageOn = !document.hidden; schedule(); });
+
+      function relayout() {
+        var before = stops.length;
+        computeStops();
+        if (stops.length !== before || (dotsWrap && dotsWrap.children.length !== stops.length)) buildDots();
+        idx = Math.min(idx, stops.length - 1);
+        paintDots();
+        measure();
+      }
+      if ('ResizeObserver' in window) new ResizeObserver(relayout).observe(track);
+      else window.addEventListener('resize', relayout);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
+
+      computeStops(); buildDots(); measure(); schedule();
+      root.__vprStop = function () { clearTimeout(timer); clearTimeout(holdT); stopAnim(); };
+    }
+
+    /* ---------- Carga del CSV y pintado ---------- */
+    var editor = !!(window.Shopify && window.Shopify.designMode);
+    function note(root, text) {
+      if (!editor) return;
+      root.hidden = false;
+      root.querySelector('[data-vpr-track]').innerHTML = '<p class="apr__note">' + esc(text) + '</p>';
+    }
+    function load(root) {
+      if (root.__cvr) return;
+      root.__cvr = true;
+      var ds = root.dataset, handle = (ds.product || '').toLowerCase();
+      var opt = {
+        showDates: ds.showDates === 'true', showVerified: ds.showVerified === 'true',
+        verifiedLabel: ds.verifiedLabel, unverifiedLabel: ds.unverifiedLabel,
+        more: ds.more, less: ds.less, tStars: ds.tStars || '__R__'
+      };
+      fetch(ds.src, { credentials: 'omit' })
+        .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+        .then(function (text) {
+          var list = parseCsv(text).map(function (row) {
+            return {
+              product: get(row, 'product').toLowerCase(), author: get(row, 'author'), rating: Math.round(Number(get(row, 'rating'))),
+              title: get(row, 'title'), body: get(row, 'body'), date: parseDate(get(row, 'date')),
+              verified: /^(true|1|yes|si|sí)$/i.test(get(row, 'verified')), photo: get(row, 'photo'), status: get(row, 'status').toLowerCase()
+            };
+          }).filter(function (r) {
+            return r.product === handle && r.author && r.body && r.rating >= 1 && r.rating <= 5 && !/^(hidden|pending|rejected|oculta)$/.test(r.status);
+          });
+          list.sort(function (a, b) { return (b.date ? b.date.getTime() : 0) - (a.date ? a.date.getTime() : 0); });
+          list = list.slice(0, Math.max(1, parseInt(ds.max, 10) || 30));
+          if (!list.length) { note(root, 'El CSV no tiene reseñas para el producto «' + handle + '».'); return; }
+          root.querySelector('[data-vpr-track]').innerHTML = list.map(function (r, i) { return cardHtml(r, i, list.length, opt); }).join('');
+          root.hidden = false;
+          init(root);
+        })
+        .catch(function (err) {
+          if (window.console) console.warn('[reseñas csv]', err);
+          note(root, 'No se pudo leer el CSV (' + (err && err.message) + '). Revisa que exista assets/nais-reviews.csv o la URL indicada.');
+        });
+    }
+    function boot(scope) { (scope || document).querySelectorAll('[data-cvr]').forEach(load); }
+    if (document.readyState !== 'loading') boot(); else document.addEventListener('DOMContentLoaded', function () { boot(); });
+    document.addEventListener('shopify:section:load', function (e) { boot(e.target); });
+    document.addEventListener('shopify:section:unload', function (e) {
+      var r = e.target.querySelector('[data-cvr]');
+      if (r && r.__vprStop) r.__vprStop();
+    });
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Reseñas desde CSV",
+  "tag": "section",
+  "settings": [
+    { "type": "text", "id": "anchor", "label": "ID de ancla", "info": "La franja de valoración encima del título del producto enlaza aquí." },
+    { "type": "text", "id": "eyebrow", "label": "Antetítulo" },
+    { "type": "text", "id": "heading", "label": "Título" },
+    { "type": "paragraph", "content": "Lee las reseñas del archivo assets/nais-reviews.csv del tema. Columnas: product (handle del producto), author, review_date, rating, title, body, verified, photo. Opcional: status = hidden para ocultar una fila." },
+    { "type": "text", "id": "csv_url", "label": "URL del CSV (opcional)", "info": "Déjalo vacío para usar assets/nais-reviews.csv. Si pones una URL, el servidor debe permitir leerla desde la tienda." },
+    { "type": "range", "id": "max_reviews", "label": "Máximo de reseñas mostradas", "min": 6, "max": 120, "step": 2, "default": 30, "info": "Se muestran las más recientes." },
+    { "type": "header", "content": "Carrusel" },
+    { "type": "checkbox", "id": "autoplay", "label": "Avance automático", "default": true },
+    { "type": "range", "id": "interval", "label": "Tiempo por diapositiva", "min": 4, "max": 10, "step": 1, "unit": "s", "default": 6 },
+    { "type": "header", "content": "Detalles" },
+    { "type": "checkbox", "id": "show_dates", "label": "Mostrar fechas", "default": true },
+    { "type": "checkbox", "id": "show_verified", "label": "Mostrar insignia de compra verificada", "default": true, "info": "Solo en las filas con verified = true." },
+    { "type": "text", "id": "verified_label", "label": "Etiqueta de verificado", "default": "Verified purchase" },
+    { "type": "text", "id": "unverified_label", "label": "Etiqueta para reseñas no verificadas", "info": "Opcional, por ejemplo «Supplier review». Se muestra en las filas con verified = false." },
+    { "type": "text", "id": "read_more", "label": "Texto de «Leer más»", "default": "Read more" },
+    { "type": "text", "id": "read_less", "label": "Texto de «Leer menos»", "default": "Read less" },
+    { "type": "header", "content": "Apariencia" },
+    { "type": "color", "id": "bg_color", "label": "Color de fondo", "info": "Déjalo vacío para usar el papel de marca" },
+    { "type": "range", "id": "pad_top", "label": "Espaciado superior", "min": 0, "max": 180, "step": 4, "unit": "px", "default": 88 },
+    { "type": "range", "id": "pad_bottom", "label": "Espaciado inferior", "min": 0, "max": 180, "step": 4, "unit": "px", "default": 88 }
+  ],
+  "enabled_on": { "templates": ["product"] },
+  "presets": [
+    {
+      "name": "Reseñas desde CSV",
+      "settings": { "anchor": "reviews-csv", "eyebrow": "Reviews", "heading": "From our customers.", "autoplay": true, "interval": 6, "show_dates": true, "show_verified": true, "verified_label": "Verified purchase", "read_more": "Read more", "read_less": "Read less", "pad_top": 88, "pad_bottom": 96 }
+    }
+  ]
+}
+{% endschema %}
