@@ -1,8 +1,8 @@
 {%- comment -%}
   Base — Reseñas desde CSV (página de producto).
   Copia visual de «Reseñas con foto», pero sin metaobjects: lee un archivo CSV
-  (por defecto assets/reviews.csv del propio tema; un nombre suelto en los
-  ajustes se busca en Assets del tema; una dirección https:// se usa tal cual) y muestra las filas cuyo «product» coincide con el handle del producto.
+  (por defecto Contenido > Archivos (reviews.csv); un nombre suelto en los
+  ajustes se busca en Contenido > Archivos; una dirección https:// se usa tal cual) y muestra las filas cuyo «product» coincide con el handle del producto.
   Columnas: product, author, review_date, rating, title, body, verified, photo
   (opcional: status = approved/hidden para ocultar una fila sin borrarla).
   Sin servidor: todo ocurre en el navegador del visitante.
@@ -15,13 +15,13 @@
   assign csv_src = section.settings.csv_url | strip
   assign csv_first = csv_src | slice: 0, 1
   if csv_src == blank
-    assign csv_src = 'reviews.csv' | asset_url
+    assign csv_src = 'reviews.csv' | file_url
   elsif csv_src contains '://' or csv_first == '/'
     comment
       Dirección completa (https://...) o ruta absoluta: se usa tal cual.
     endcomment
   else
-    assign csv_src = csv_src | asset_url
+    assign csv_src = csv_src | file_url
   endif
   assign t_stars = 'products.reviews.stars_aria' | t: rating: '__R__'
   assign t_goto = 'general.slider.go_to_position' | t: index: '__I__', total: '__N__'
@@ -478,7 +478,7 @@
     { "type": "text", "id": "eyebrow", "label": "Antetítulo" },
     { "type": "text", "id": "heading", "label": "Título" },
     { "type": "paragraph", "content": "Lee las reseñas del archivo assets/reviews.csv del tema. Columnas: product (handle del producto), author, review_date, rating, title, body, verified, photo. Opcional: status = hidden para ocultar una fila." },
-    { "type": "text", "id": "csv_url", "label": "URL del CSV (opcional)", "info": "Vacío: usa assets/reviews.csv. Un nombre suelto (ej. otro.csv) se busca en Assets del tema. Una dirección completa (https://...) se usa tal cual." },
+    { "type": "text", "id": "csv_url", "label": "URL del CSV (opcional)", "info": "Vacío: usa reviews.csv de Contenido > Archivos. Un nombre suelto (ej. otro.csv) se busca en Contenido > Archivos. Una dirección completa (https://...) se usa tal cual." },
     { "type": "range", "id": "max_reviews", "label": "Máximo de reseñas mostradas", "min": 6, "max": 120, "step": 2, "default": 30, "info": "Se muestran las más recientes." },
     { "type": "header", "content": "Carrusel" },
     { "type": "checkbox", "id": "autoplay", "label": "Avance automático", "default": true },
