@@ -1,0 +1,7 @@
+product,author,review_date,rating,title,body,verified,photo,status
+butterfly-contour-pillow-v2,Prueba Uno,2026-10-10,5,PRUEBA 1 - con foto vertical,"Reseña de prueba con una foto vertical. Debe salir la primera, con la imagen a la izquierda.",false,https://cdn.shopify.com/s/files/1/0839/1137/7113/files/1725915142__0.png?v=1791642393,approved
+butterfly-contour-pillow-v2,Prueba Dos,2026-10-09,4,PRUEBA 2 - con foto,Reseña de prueba con otra foto. Debe salir la segunda.,false,https://cdn.shopify.com/s/files/1/0839/1137/7113/files/1725915142__3.png?v=1791642393,approved
+butterfly-contour-pillow-v2,Prueba Tres,2026-10-08,5,PRUEBA 3 - con foto,Reseña de prueba con una tercera foto.,false,https://cdn.shopify.com/s/files/1/0839/1137/7113/files/1725915142__8.png?v=1791642393,approved
+butterfly-contour-pillow-v2,Prueba Cuatro,2026-10-07,5,PRUEBA 4 - sin foto,Reseña de prueba sin foto. Debe verse como tarjeta de solo texto.,false,,approved
+butterfly-contour-pillow-v2,Prueba Oculta,2026-10-11,5,PRUEBA 5 - OCULTA (no debe verse),Esta reseña tiene hidden en status y no debe aparecer.,false,https://cdn.shopify.com/s/files/1/0839/1137/7113/files/1725915142__0.png?v=1791642393,hidden
+otro-producto,Prueba Otro,2026-10-11,5,PRUEBA 6 - OTRO PRODUCTO (no debe verse),Esta reseña es de otro producto y no debe aparecer aquí.,false,https://cdn.shopify.com/s/files/1/0839/1137/7113/files/1725915142__0.png?v=1791642393,approved
