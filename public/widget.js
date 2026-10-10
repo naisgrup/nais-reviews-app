@@ -1,17 +1,19 @@
 /* Widget de reseñas. Uso en el tema de Shopify:
-   <div id="nais-reviews" data-product-id="{{ product.id }}" data-product-title="{{ product.title | escape }}"></div>
+   <div id="nais-reviews" data-shop="{{ shop.permanent_domain }}" data-product-id="{{ product.handle }}" data-product-title="{{ product.title | escape }}"></div>
    <script src="https://TU-APP.onrender.com/widget.js" defer></script> */
 (function () {
   var script = document.currentScript || document.querySelector('script[src*="widget.js"]');
   var API = new URL(script.src).origin;
   var root = document.getElementById('nais-reviews');
   if (!root) return;
-  var pid = root.dataset.productId;
-  var ptitle = root.dataset.productTitle || '';
+  var shop = root.dataset.shop, pid = root.dataset.productId, ptitle = root.dataset.productTitle || '';
+  if (!shop || !pid) return;
+  var base = API + '/api/' + encodeURIComponent(shop);
 
   var css = '#nais-reviews{font-family:inherit;max-width:720px;margin:2rem auto}' +
     '#nais-reviews .nr-star{color:#f5a623;letter-spacing:2px}#nais-reviews .nr-muted{color:#777;font-size:.85em}' +
     '#nais-reviews .nr-card{border-top:1px solid #e5e5e5;padding:14px 0}' +
+    '#nais-reviews .nr-tag{display:inline-block;margin-left:6px;padding:1px 8px;border:1px solid #ccc;border-radius:99px;font-size:.75em;color:#555}' +
     '#nais-reviews .nr-reply{background:#f6f6f6;border-left:3px solid #999;margin:8px 0 0;padding:8px 12px;font-size:.92em}' +
     '#nais-reviews input,#nais-reviews textarea,#nais-reviews select{width:100%;padding:10px;margin:6px 0;border:1px solid #ccc;border-radius:6px;font:inherit;box-sizing:border-box}' +
     '#nais-reviews button{padding:10px 18px;border:0;border-radius:6px;background:#111;color:#fff;font:inherit;cursor:pointer}' +
@@ -27,7 +29,8 @@
       ? '<p><span class="nr-star">' + stars(data.average) + '</span> <strong>' + data.average + '</strong> <span class="nr-muted">(' + data.count + ' reseñas)</span></p>'
       : '<p class="nr-muted">Aún no hay reseñas. ¡Sé el primero!</p>';
     data.reviews.forEach(function (r) {
-      h += '<div class="nr-card"><span class="nr-star">' + stars(r.rating) + '</span> <strong>' + esc(r.title) + '</strong>' +
+      var tag = r.verified ? '<span class="nr-tag">Compra verificada</span>' : (r.source === 'import' && data.imported_label ? '<span class="nr-tag">' + esc(data.imported_label) + '</span>' : '');
+      h += '<div class="nr-card"><span class="nr-star">' + stars(r.rating) + '</span> <strong>' + esc(r.title) + '</strong>' + tag +
         '<p>' + esc(r.body) + '</p><div class="nr-muted">' + esc(r.author) + ' · ' + esc(r.created_at.slice(0, 10)) + '</div>' +
         (r.reply ? '<div class="nr-reply"><strong>Respuesta de la tienda:</strong><br>' + esc(r.reply) + '</div>' : '') + '</div>';
     });
@@ -48,7 +51,7 @@
     var f = e.target, msg = document.getElementById('nr-msg');
     var body = Object.fromEntries(new FormData(f)); body.product_id = pid; body.product_title = ptitle;
     msg.textContent = 'Enviando…';
-    fetch(API + '/api/reviews', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    fetch(base + '/reviews', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
       .then(function (x) {
         if (x.ok) { f.reset(); msg.textContent = x.j.message || '¡Gracias!'; } else { msg.textContent = x.j.error || 'Error al enviar.'; }
@@ -56,6 +59,6 @@
       .catch(function () { msg.textContent = 'Error de conexión.'; });
   }
 
-  fetch(API + '/api/products/' + encodeURIComponent(pid) + '/reviews').then(function (r) { return r.json(); }).then(render)
+  fetch(base + '/products/' + encodeURIComponent(pid) + '/reviews').then(function (r) { return r.json(); }).then(render)
     .catch(function () { root.innerHTML = ''; });
 })();
