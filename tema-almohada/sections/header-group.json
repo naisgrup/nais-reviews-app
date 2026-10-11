@@ -50,9 +50,9 @@
     "review_ticker": {
       "type": "deload-review-ticker",
       "blocks": {
-        "r1": { "type": "review", "settings": { "quote": "[PLACEHOLDER] Real customer quote 1", "name": "[PLACEHOLDER] Name", "city": "City", "verified": true } },
-        "r2": { "type": "review", "settings": { "quote": "[PLACEHOLDER] Real customer quote 2", "name": "[PLACEHOLDER] Name", "city": "City", "verified": true } },
-        "r3": { "type": "review", "settings": { "quote": "[PLACEHOLDER] Real customer quote 3", "name": "[PLACEHOLDER] Name", "city": "City", "verified": true } }
+        "r1": { "type": "review", "settings": { "quote": "Dummy text: short customer quote one", "name": "Dummy A.", "city": "City", "verified": true } },
+        "r2": { "type": "review", "settings": { "quote": "Dummy text: short customer quote two", "name": "Dummy B.", "city": "City", "verified": true } },
+        "r3": { "type": "review", "settings": { "quote": "Dummy text: short customer quote three", "name": "Dummy C.", "city": "City", "verified": true } }
       },
       "block_order": ["r1", "r2", "r3"],
       "settings": {
