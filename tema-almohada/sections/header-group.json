@@ -50,9 +50,9 @@
     "review_ticker": {
       "type": "deload-review-ticker",
       "blocks": {
-        "r1": { "type": "review", "settings": { "quote": "Dummy text: short customer quote one", "name": "Dummy A.", "city": "City", "verified": true } },
-        "r2": { "type": "review", "settings": { "quote": "Dummy text: short customer quote two", "name": "Dummy B.", "city": "City", "verified": true } },
-        "r3": { "type": "review", "settings": { "quote": "Dummy text: short customer quote three", "name": "Dummy C.", "city": "City", "verified": true } }
+        "r1": { "type": "review", "settings": { "quote": "Dummy text: short quote one", "name": "Dummy A.", "city": "City", "verified": true } },
+        "r2": { "type": "review", "settings": { "quote": "Dummy text: short quote two", "name": "Dummy B.", "city": "City", "verified": true } },
+        "r3": { "type": "review", "settings": { "quote": "Dummy text: short quote three", "name": "Dummy C.", "city": "City", "verified": true } }
       },
       "block_order": ["r1", "r2", "r3"],
       "settings": {
@@ -62,8 +62,8 @@
         "verified_label": "Verified Buyer",
         "stars_label": "5 out of 5 stars",
         "region_label": "Customer reviews",
-        "bg_color": "#F4EDE3",
-        "text_color": "#2B2622",
+        "bg_color": "",
+        "text_color": "",
         "accent_color": "#B08D57"
       }
     }
