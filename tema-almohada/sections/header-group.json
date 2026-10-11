@@ -56,7 +56,7 @@
       },
       "block_order": ["r1", "r2", "r3"],
       "settings": {
-        "enabled": false,
+        "enabled": true,
         "interval": 5,
         "link": "#reviews",
         "verified_label": "Verified Buyer",
