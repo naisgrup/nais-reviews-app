@@ -1,15 +1,15 @@
 product,author,review_date,rating,title,body,verified,photo,status,tags
-butterfly-pillow,Tester 1.,2026-09-02,5,Better Sleep: test review 1,Texto de prueba (test) para la etiqueta Better Sleep. Review número 1.,true,,,Better Sleep
-butterfly-pillow,Tester 2.,2026-09-03,5,Better Sleep: test review 2,Texto de prueba (test) para la etiqueta Better Sleep. Review número 2.,false,,,Better Sleep
-butterfly-pillow,Tester 3.,2026-09-04,4,Better Sleep: test review 3,Texto de prueba (test) para la etiqueta Better Sleep. Review número 3.,true,,,Better Sleep
-butterfly-pillow,Tester 4.,2026-09-05,5,Better Sleep: test review 4,Texto de prueba (test) para la etiqueta Better Sleep. Review número 4.,false,,,Better Sleep|Neck Relief
-butterfly-pillow,Tester 5.,2026-09-06,5,Neck Relief: test review 1,Texto de prueba (test) para la etiqueta Neck Relief. Review número 5.,true,,,Neck Relief
-butterfly-pillow,Tester 6.,2026-09-07,4,Neck Relief: test review 2,Texto de prueba (test) para la etiqueta Neck Relief. Review número 6.,false,,,Neck Relief
-butterfly-pillow,Tester 7.,2026-09-08,5,Neck Relief: test review 3,Texto de prueba (test) para la etiqueta Neck Relief. Review número 7.,true,,,Neck Relief
-butterfly-pillow,Tester 8.,2026-09-09,5,Neck Relief: test review 4,Texto de prueba (test) para la etiqueta Neck Relief. Review número 8.,false,,,Neck Relief|Vs Standard Pillows
-butterfly-pillow,Tester 9.,2026-09-10,4,Vs Standard Pillows: test review 1,Texto de prueba (test) para la etiqueta Vs Standard Pillows. Review número 9.,true,,,Vs Standard Pillows
-butterfly-pillow,Tester 10.,2026-09-11,5,Vs Standard Pillows: test review 2,Texto de prueba (test) para la etiqueta Vs Standard Pillows. Review número 10.,false,,,Vs Standard Pillows
-butterfly-pillow,Tester 11.,2026-09-12,5,Back Sleeper: test review 1,Texto de prueba (test) para la etiqueta Back Sleeper. Review número 11.,true,,,Back Sleeper
-butterfly-pillow,Tester 12.,2026-09-13,4,Back Sleeper: test review 2,Texto de prueba (test) para la etiqueta Back Sleeper. Review número 12.,false,,,Back Sleeper|Side Sleeper
-butterfly-pillow,Tester 13.,2026-09-14,5,Side Sleeper: test review 1,Texto de prueba (test) para la etiqueta Side Sleeper. Review número 13.,true,,,Side Sleeper
-butterfly-pillow,Tester 14.,2026-09-15,5,Side Sleeper: test review 2,Texto de prueba (test) para la etiqueta Side Sleeper. Review número 14.,false,,,Side Sleeper
+butterfly-contour-pillow-v2,Tester 1.,2026-09-02,5,Better Sleep: test review 1,Texto de prueba (test) para la etiqueta Better Sleep. Review número 1.,true,,,Better Sleep
+butterfly-contour-pillow-v2,Tester 2.,2026-09-03,5,Better Sleep: test review 2,Texto de prueba (test) para la etiqueta Better Sleep. Review número 2.,false,,,Better Sleep
+butterfly-contour-pillow-v2,Tester 3.,2026-09-04,4,Better Sleep: test review 3,Texto de prueba (test) para la etiqueta Better Sleep. Review número 3.,true,,,Better Sleep
+butterfly-contour-pillow-v2,Tester 4.,2026-09-05,5,Better Sleep: test review 4,Texto de prueba (test) para la etiqueta Better Sleep. Review número 4.,false,,,Better Sleep|Neck Relief
+butterfly-contour-pillow-v2,Tester 5.,2026-09-06,5,Neck Relief: test review 1,Texto de prueba (test) para la etiqueta Neck Relief. Review número 5.,true,,,Neck Relief
+butterfly-contour-pillow-v2,Tester 6.,2026-09-07,4,Neck Relief: test review 2,Texto de prueba (test) para la etiqueta Neck Relief. Review número 6.,false,,,Neck Relief
+butterfly-contour-pillow-v2,Tester 7.,2026-09-08,5,Neck Relief: test review 3,Texto de prueba (test) para la etiqueta Neck Relief. Review número 7.,true,,,Neck Relief
+butterfly-contour-pillow-v2,Tester 8.,2026-09-09,5,Neck Relief: test review 4,Texto de prueba (test) para la etiqueta Neck Relief. Review número 8.,false,,,Neck Relief|Vs Standard Pillows
+butterfly-contour-pillow-v2,Tester 9.,2026-09-10,4,Vs Standard Pillows: test review 1,Texto de prueba (test) para la etiqueta Vs Standard Pillows. Review número 9.,true,,,Vs Standard Pillows
+butterfly-contour-pillow-v2,Tester 10.,2026-09-11,5,Vs Standard Pillows: test review 2,Texto de prueba (test) para la etiqueta Vs Standard Pillows. Review número 10.,false,,,Vs Standard Pillows
+butterfly-contour-pillow-v2,Tester 11.,2026-09-12,5,Back Sleeper: test review 1,Texto de prueba (test) para la etiqueta Back Sleeper. Review número 11.,true,,,Back Sleeper
+butterfly-contour-pillow-v2,Tester 12.,2026-09-13,4,Back Sleeper: test review 2,Texto de prueba (test) para la etiqueta Back Sleeper. Review número 12.,false,,,Back Sleeper|Side Sleeper
+butterfly-contour-pillow-v2,Tester 13.,2026-09-14,5,Side Sleeper: test review 1,Texto de prueba (test) para la etiqueta Side Sleeper. Review número 13.,true,,,Side Sleeper
+butterfly-contour-pillow-v2,Tester 14.,2026-09-15,5,Side Sleeper: test review 2,Texto de prueba (test) para la etiqueta Side Sleeper. Review número 14.,false,,,Side Sleeper
