@@ -1,0 +1,421 @@
+{%- comment -%}
+  Base — Reseñas por etiqueta (CSV).
+  Pestañas con las preocupaciones de los clientes (pain points); al elegir una, se
+  muestran las reseñas del CSV que llevan esa etiqueta. Lee el mismo reviews.csv que
+  la sección «Reseñas desde CSV» y añade UNA columna: tags (varias etiquetas separadas
+  por | o ;). Las pestañas se definen con bloques; sin bloques, se crean solas a partir
+  de las etiquetas que haya en el CSV. Sin servidor: todo ocurre en el navegador.
+{%- endcomment -%}
+{%- liquid
+  assign bg = section.settings.bg_color
+  if bg == blank or bg == 'rgba(0,0,0,0)'
+    assign bg = 'var(--dl-paper, #fff)'
+  endif
+  assign accent = section.settings.accent_color
+  if accent == blank or accent == 'rgba(0,0,0,0)'
+    assign accent = 'var(--dl-graphite, #222)'
+  endif
+  assign card_bg = section.settings.card_bg
+  if card_bg == blank or card_bg == 'rgba(0,0,0,0)'
+    assign card_bg = '#fff'
+  endif
+  assign csv_src = section.settings.csv_url | strip
+  assign csv_first = csv_src | slice: 0, 1
+  if csv_src == blank
+    assign csv_src = 'reviews.csv' | file_url
+  elsif csv_src contains '://' or csv_first == '/'
+    comment
+      Dirección completa (https://...) o ruta absoluta: se usa tal cual.
+    endcomment
+  else
+    assign csv_src = csv_src | file_url
+  endif
+  assign t_stars = 'products.reviews.stars_aria' | t: rating: '__R__'
+-%}
+<section class="rvt" hidden
+         {% if section.settings.anchor != blank %}id="{{ section.settings.anchor }}"{% endif %}
+         data-rvt
+         data-src="{{ csv_src }}"
+         data-product="{{ product.handle }}"
+         data-max="{{ section.settings.max_reviews }}"
+         data-per="{{ section.settings.reviews_per_tab }}"
+         data-show-all="{{ section.settings.show_all_tab }}"
+         data-all-label="{{ section.settings.all_tab_label | escape }}"
+         data-show-dates="{{ section.settings.show_dates }}"
+         data-show-verified="{{ section.settings.show_verified }}"
+         data-verified-label="{{ section.settings.verified_label | escape }}"
+         data-unverified-label="{{ section.settings.unverified_label | escape }}"
+         data-more-label="{{ section.settings.show_more_label | escape }}"
+         data-read-more="{{ section.settings.read_more | escape }}"
+         data-read-less="{{ section.settings.read_less | escape }}"
+         data-empty="{{ section.settings.empty_text | escape }}"
+         data-t-stars="{{ t_stars | escape }}"
+         style="--rvt-bg: {{ bg }}; --rvt-accent: {{ accent }}; --rvt-card: {{ card_bg }}; --rvt-star: {{ section.settings.star_color }}; padding-top: {{ section.settings.pad_top }}px; padding-bottom: {{ section.settings.pad_bottom }}px;"
+         aria-labelledby="rvt-h-{{ section.id }}">
+  <div class="dl-wrap">
+    {%- if section.settings.heading != blank -%}
+      <h2 class="dl-h2 rvt__h" id="rvt-h-{{ section.id }}">{{ section.settings.heading }}</h2>
+    {%- endif -%}
+    <div class="rvt__tabs" role="tablist" data-rvt-tabs aria-label="{{ section.settings.heading | default: 'Reviews' | escape }}"></div>
+    {%- if section.settings.subtitle != blank -%}
+      <p class="rvt__sub">{{ section.settings.subtitle }}</p>
+    {%- endif -%}
+    <div class="rvt__panel" role="tabpanel" data-rvt-panel aria-live="polite">
+      <div class="rvt__grid" data-rvt-grid></div>
+    </div>
+    <div class="rvt__morewrap"><button type="button" class="rvt__more" data-rvt-more hidden></button></div>
+  </div>
+  <script type="application/json" data-rvt-config>[{% for block in section.blocks %}{ "label": {{ block.settings.label | json }}, "tag": {{ block.settings.tag | default: block.settings.label | json }} }{% unless forloop.last %},{% endunless %}{% endfor %}]</script>
+</section>
+
+<style>
+  .rvt { background: var(--rvt-bg); color: var(--dl-graphite, #222); }
+  .rvt[hidden] { display: none; }
+  .rvt__h { text-align: center; font-size: clamp(28px, 4vw, 44px); margin: 0 0 clamp(20px, 3vw, 32px); }
+
+  .rvt__tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+  .rvt__tab {
+    appearance: none; -webkit-appearance: none; cursor: pointer;
+    font: inherit; font-weight: 700; font-size: 17px; line-height: 1; letter-spacing: -.005em;
+    padding: 13px 24px; border-radius: 999px;
+    color: var(--dl-graphite, #222); background: transparent;
+    border: 1.5px solid var(--rvt-accent);
+    transition: background .18s ease, color .18s ease, transform .12s ease;
+  }
+  .rvt__tab:hover { background: color-mix(in srgb, var(--rvt-accent) 9%, transparent); }
+  .rvt__tab:active { transform: scale(.97); }
+  .rvt__tab.is-active { background: var(--rvt-accent); color: #fff; }
+  .rvt__tab:focus-visible { outline: 2px solid var(--rvt-accent); outline-offset: 3px; }
+
+  .rvt__sub { text-align: center; font-size: 17px; line-height: 1.5; margin: clamp(22px, 3vw, 30px) auto clamp(26px, 3.4vw, 38px); max-width: 640px; }
+
+  .rvt__grid { display: grid; grid-template-columns: 1fr; gap: 18px; align-items: stretch; }
+  .rvt__grid.is-fresh { animation: rvtIn .28s ease both; }
+  @keyframes rvtIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .rvt__card {
+    display: flex; flex-direction: column; gap: 10px; min-width: 0;
+    background: var(--rvt-card); color: var(--dl-graphite, #222);
+    border: 1px solid var(--dl-line, #e5e5e5); border-radius: 16px;
+    padding: 22px 24px; box-shadow: 0 1px 6px rgba(0, 0, 0, .05);
+  }
+  .rvt__media { position: relative; aspect-ratio: 4 / 3; border-radius: 12px; overflow: hidden; background: var(--dl-mist, #f3f1ee); margin-bottom: 4px; }
+  .rvt__blur { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: blur(20px) saturate(1.05); transform: scale(1.25); opacity: .45; }
+  .rvt__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+
+  .rvt__top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .rvt__stars { font-size: 18px; line-height: 1; letter-spacing: 2px; color: #d9d9d9; }
+  .rvt__stars .is-on { color: var(--rvt-star); }
+  .rvt__score { font-size: 13px; line-height: 1; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .rvt__date { margin-left: auto; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--dl-slate, #666); white-space: nowrap; }
+  .rvt__title { font-size: clamp(20px, 2vw, 25px); line-height: 1.18; font-weight: 700; letter-spacing: -.01em; margin: 2px 0 0; }
+  .rvt__text {
+    margin: 0; font-size: 15px; line-height: 1.6; color: var(--dl-slate, #555);
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 7; overflow: hidden;
+  }
+  .rvt__card.is-open .rvt__text { display: block; -webkit-line-clamp: unset; overflow: visible; }
+  .rvt__rm {
+    align-self: flex-start; padding: 2px 0; margin: -2px 0 0; background: none; border: 0; cursor: pointer;
+    font: inherit; font-size: 14px; font-weight: 600; color: var(--dl-graphite, #222);
+    text-decoration: underline; text-underline-offset: 3px;
+  }
+  .rvt__rm[hidden] { display: none; }
+  .rvt__who { display: flex; align-items: center; gap: 11px; margin-top: auto; padding-top: 14px; }
+  .rvt__av { flex: none; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #f1f1f1; font-size: 13px; font-weight: 700; color: var(--dl-graphite, #222); }
+  .rvt__ident { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .rvt__name { font-size: 14px; font-weight: 700; line-height: 1.1; overflow-wrap: anywhere; }
+  .rvt__vf { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; line-height: 1.1; color: var(--rvt-accent); font-weight: 500; }
+  .rvt__vf svg { width: 12px; height: 12px; flex: none; }
+
+  .rvt__morewrap { display: flex; justify-content: center; margin-top: 26px; }
+  .rvt__more {
+    appearance: none; -webkit-appearance: none; cursor: pointer; font: inherit; font-weight: 700; font-size: 15px;
+    padding: 12px 26px; border-radius: 999px; background: transparent; color: var(--dl-graphite, #222); border: 1.5px solid var(--rvt-accent);
+  }
+  .rvt__more:hover { background: color-mix(in srgb, var(--rvt-accent) 9%, transparent); }
+  .rvt__more:focus-visible { outline: 2px solid var(--rvt-accent); outline-offset: 3px; }
+  .rvt__more[hidden] { display: none; }
+  .rvt__empty { grid-column: 1 / -1; text-align: center; padding: 28px 12px; color: var(--dl-slate, #666); font-size: 15px; }
+
+  @media (max-width: 749px) {
+    .rvt__tabs { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; scrollbar-width: none; scroll-snap-type: x proximity; margin-inline: calc(var(--dl-gutter, 16px) * -1); padding: 4px var(--dl-gutter, 16px); }
+    .rvt__tabs::-webkit-scrollbar { display: none; }
+    .rvt__tab { flex: none; scroll-snap-align: center; font-size: 15px; padding: 12px 18px; }
+    .rvt__sub { font-size: 15.5px; }
+  }
+  @media (min-width: 640px) { .rvt__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (min-width: 990px) { .rvt__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; } }
+  @media (prefers-reduced-motion: reduce) { .rvt__grid.is-fresh { animation: none; } .rvt__tab { transition: none; } }
+</style>
+
+<script>
+  (function () {
+    /* ---------- CSV ---------- */
+    function parseCsv(text) {
+      text = String(text).replace(/^﻿/, '');
+      var rows = [], row = [], field = '', inQ = false, i, c;
+      for (i = 0; i < text.length; i++) {
+        c = text[i];
+        if (inQ) {
+          if (c === '"') { if (text[i + 1] === '"') { field += '"'; i++; } else inQ = false; }
+          else field += c;
+        } else if (c === '"') inQ = true;
+        else if (c === ',') { row.push(field); field = ''; }
+        else if (c === '\n' || c === '\r') {
+          if (c === '\r' && text[i + 1] === '\n') i++;
+          row.push(field); field = '';
+          if (row.some(function (v) { return v !== ''; })) rows.push(row);
+          row = [];
+        } else field += c;
+      }
+      row.push(field);
+      if (row.some(function (v) { return v !== ''; })) rows.push(row);
+      if (!rows.length) return [];
+      var head = rows[0].map(function (h) { return h.trim().toLowerCase(); });
+      return rows.slice(1).map(function (r) {
+        var o = {}; head.forEach(function (h, k) { o[h] = r[k] == null ? '' : r[k]; }); return o;
+      });
+    }
+    var ALIAS = {
+      product: ['product', 'product_handle', 'handle', 'producto'],
+      author: ['author', 'reviewer_name', 'autor', 'name', 'nombre'],
+      rating: ['rating', 'estrellas', 'stars'],
+      title: ['title', 'titulo', 'título'],
+      body: ['body', 'texto', 'review', 'comentario'],
+      date: ['review_date', 'date', 'fecha'],
+      verified: ['verified', 'verified_purchase', 'verificada'],
+      photo: ['photo', 'foto', 'image'],
+      status: ['status', 'estado'],
+      tags: ['tags', 'tag', 'etiquetas', 'etiqueta', 'pain_points', 'pain_point', 'categorias', 'categoria', 'topics', 'topic']
+    };
+    function get(row, key) {
+      var a = ALIAS[key];
+      for (var i = 0; i < a.length; i++) if (row[a[i]] != null && String(row[a[i]]).trim() !== '') return String(row[a[i]]).trim();
+      return '';
+    }
+    function parseDate(s) {
+      var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
+      if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+      m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(s);
+      if (m) return new Date(+m[3], +m[2] - 1, +m[1]);
+      return null;
+    }
+    function esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML; }
+    function fmtDate(d) { return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+    /* Compara etiquetas sin distinguir mayúsculas, acentos ni espacios de más */
+    function norm(s) {
+      var t = String(s == null ? '' : s).toLowerCase();
+      if (t.normalize) t = t.normalize('NFD').replace(/[̀-ͯ]/g, '');
+      return t.replace(/\s+/g, ' ').trim();
+    }
+
+    var CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="currentColor"/><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+    function cardHtml(r, o) {
+      var stars = '';
+      for (var k = 1; k <= 5; k++) stars += '<span aria-hidden="true"' + (k <= r.rating ? ' class="is-on"' : '') + '>★</span>';
+      var media = r.photo
+        ? '<div class="rvt__media"><img class="rvt__blur" src="' + esc(r.photo) + '" alt="" aria-hidden="true" loading="lazy" width="80" height="60">' +
+          '<img class="rvt__img" src="' + esc(r.photo) + '" alt="' + esc(r.author) + '" loading="lazy"></div>'
+        : '';
+      var badge = '';
+      if (r.verified && o.showVerified) badge = '<span class="rvt__vf">' + CHECK + esc(o.verifiedLabel) + '</span>';
+      else if (!r.verified && o.unverifiedLabel) badge = '<span class="rvt__vf">' + esc(o.unverifiedLabel) + '</span>';
+      var initial = esc((r.author.charAt(0) || '?').toUpperCase());
+      return '<article class="rvt__card">' + media +
+        '<div class="rvt__top"><span class="rvt__stars" role="img" aria-label="' + esc(o.tStars.replace('__R__', r.rating)) + '">' + stars + '</span>' +
+        '<span class="rvt__score" aria-hidden="true">' + r.rating + '/5</span>' +
+        (o.showDates && r.date ? '<time class="rvt__date" datetime="' + r.date.toISOString().slice(0, 10) + '">' + esc(fmtDate(r.date)) + '</time>' : '') + '</div>' +
+        (r.title ? '<h3 class="rvt__title">' + esc(r.title) + '</h3>' : '') +
+        '<p class="rvt__text" data-text>' + esc(r.body).replace(/\n/g, '<br>') + '</p>' +
+        '<button type="button" class="rvt__rm" data-rm hidden>' + esc(o.readMore) + '</button>' +
+        '<footer class="rvt__who"><span class="rvt__av" aria-hidden="true">' + initial + '</span>' +
+        '<span class="rvt__ident"><span class="rvt__name">' + esc(r.author) + '</span>' + badge + '</span></footer></article>';
+    }
+
+    /* ---------- Sección ---------- */
+    var editor = !!(window.Shopify && window.Shopify.designMode);
+    function note(root, text) {
+      if (!editor) return;
+      root.hidden = false;
+      root.querySelector('[data-rvt-grid]').innerHTML = '<p class="rvt__empty">' + esc(text) + '</p>';
+    }
+
+    function load(root) {
+      if (root.__rvt) return;
+      root.__rvt = true;
+      var ds = root.dataset, handle = (ds.product || '').toLowerCase();
+      var per = Math.max(1, parseInt(ds.per, 10) || 3);
+      var o = {
+        showDates: ds.showDates === 'true', showVerified: ds.showVerified === 'true',
+        verifiedLabel: ds.verifiedLabel, unverifiedLabel: ds.unverifiedLabel,
+        readMore: ds.readMore, readLess: ds.readLess, tStars: ds.tStars || '__R__'
+      };
+      var cfg = [];
+      try { cfg = JSON.parse(root.querySelector('[data-rvt-config]').textContent || '[]'); } catch (e) { cfg = []; }
+      var tabsEl = root.querySelector('[data-rvt-tabs]'), panel = root.querySelector('[data-rvt-panel]');
+      var grid = root.querySelector('[data-rvt-grid]'), moreBtn = root.querySelector('[data-rvt-more]');
+      moreBtn.textContent = ds.moreLabel || 'Show more';
+      /* Parámetro que cambia cada 10 minutos: evita copias viejas del CDN o del navegador. */
+      var url = ds.src + (ds.src.indexOf('?') > -1 ? '&' : '?') + 'cb=' + Math.floor(Date.now() / 600000);
+
+      fetch(url, { credentials: 'omit' })
+        .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+        .then(function (text) {
+          var labelOf = {};
+          var all = parseCsv(text).map(function (row) {
+            var tags = get(row, 'tags').split(/[|;,]/).map(function (t) { return t.trim(); }).filter(Boolean).map(function (t) {
+              var k = norm(t); if (!labelOf[k]) labelOf[k] = t; return k;
+            });
+            return {
+              product: get(row, 'product').toLowerCase(), author: get(row, 'author'), rating: Math.round(Number(get(row, 'rating'))),
+              title: get(row, 'title'), body: get(row, 'body'), date: parseDate(get(row, 'date')),
+              verified: /^(true|1|yes|si|sí)$/i.test(get(row, 'verified')), photo: get(row, 'photo'),
+              status: get(row, 'status').toLowerCase(), tags: tags
+            };
+          }).filter(function (r) {
+            return r.product === handle && r.author && r.body && r.rating >= 1 && r.rating <= 5 && !/^(hidden|pending|rejected|oculta)$/.test(r.status);
+          });
+          all.sort(function (a, b) { return (b.date ? b.date.getTime() : 0) - (a.date ? a.date.getTime() : 0); });
+          all = all.slice(0, Math.max(1, parseInt(ds.max, 10) || 120));
+
+          var tabs = [];
+          if (cfg.length) {
+            tabs = cfg.map(function (t) {
+              var key = norm(t.tag || t.label);
+              return { label: t.label, items: all.filter(function (r) { return r.tags.indexOf(key) > -1; }) };
+            });
+          } else {
+            var counts = {};
+            all.forEach(function (r) { r.tags.forEach(function (k) { counts[k] = (counts[k] || 0) + 1; }); });
+            tabs = Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a]; }).map(function (k) {
+              return { label: labelOf[k], items: all.filter(function (r) { return r.tags.indexOf(k) > -1; }) };
+            });
+          }
+          if (ds.showAll === 'true') tabs.unshift({ label: ds.allLabel || 'All', items: all });
+          tabs = tabs.filter(function (t) { return t.items.length; });
+          if (!tabs.length) { note(root, all.length ? 'Ninguna reseña tiene etiquetas que coincidan con las pestañas. Revisa la columna «tags» del CSV.' : 'El CSV no tiene reseñas para el producto «' + handle + '».'); return; }
+
+          var active = 0, shown = per, uid = 'rvt' + Math.floor(Math.random() * 1e6);
+          function drawTabs() {
+            tabsEl.innerHTML = tabs.map(function (t, i) {
+              var on = i === active;
+              return '<button type="button" role="tab" class="rvt__tab' + (on ? ' is-active' : '') + '" id="' + uid + '-t' + i + '" aria-selected="' + on + '" aria-controls="' + uid + '-p" tabindex="' + (on ? 0 : -1) + '" data-i="' + i + '">' + esc(t.label) + '</button>';
+            }).join('');
+            panel.id = uid + '-p';
+            panel.setAttribute('aria-labelledby', uid + '-t' + active);
+          }
+          function measure() {
+            Array.prototype.forEach.call(grid.querySelectorAll('.rvt__card'), function (c) {
+              var t = c.querySelector('[data-text]'), b = c.querySelector('[data-rm]');
+              if (!t || !b) return;
+              if (c.classList.contains('is-open')) { b.hidden = false; return; }
+              b.hidden = !(t.scrollHeight > t.clientHeight + 2);
+            });
+          }
+          function drawCards(fresh) {
+            var items = tabs[active].items;
+            grid.innerHTML = items.slice(0, shown).map(function (r) { return cardHtml(r, o); }).join('');
+            moreBtn.hidden = items.length <= shown;
+            if (fresh) { grid.classList.remove('is-fresh'); void grid.offsetWidth; grid.classList.add('is-fresh'); }
+            measure();
+          }
+          function select(i, focus) {
+            if (i === active) return;
+            active = i; shown = per; drawTabs(); drawCards(true);
+            var btn = tabsEl.querySelector('[data-i="' + i + '"]');
+            if (btn) { if (focus) btn.focus(); try { btn.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }); } catch (e) {} }
+          }
+          tabsEl.addEventListener('click', function (e) {
+            var b = e.target.closest('[data-i]'); if (b) select(+b.getAttribute('data-i'), false);
+          });
+          tabsEl.addEventListener('keydown', function (e) {
+            var n = tabs.length, i = active;
+            if (e.key === 'ArrowRight') i = (active + 1) % n;
+            else if (e.key === 'ArrowLeft') i = (active - 1 + n) % n;
+            else if (e.key === 'Home') i = 0;
+            else if (e.key === 'End') i = n - 1;
+            else return;
+            e.preventDefault(); select(i, true);
+          });
+          moreBtn.addEventListener('click', function () { shown += per; drawCards(false); });
+          grid.addEventListener('click', function (e) {
+            var b = e.target.closest('[data-rm]'); if (!b) return;
+            var card = b.closest('.rvt__card'), open = !card.classList.contains('is-open');
+            card.classList.toggle('is-open', open);
+            b.textContent = open ? o.readLess : o.readMore;
+          });
+          var rz; window.addEventListener('resize', function () { clearTimeout(rz); rz = setTimeout(measure, 150); });
+          if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
+
+          drawTabs(); drawCards(false);
+          root.hidden = false;
+        })
+        .catch(function (err) {
+          if (window.console) console.warn('[reseñas por etiqueta]', err);
+          note(root, 'No se pudo leer el CSV (' + ((err && err.message) || err) + '). Revisa que reviews.csv exista en Contenido > Archivos o la URL indicada.');
+        });
+    }
+    function boot(scope) { (scope || document).querySelectorAll('[data-rvt]').forEach(load); }
+    if (document.readyState !== 'loading') boot(); else document.addEventListener('DOMContentLoaded', function () { boot(); });
+    document.addEventListener('shopify:section:load', function (e) { boot(e.target); });
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Reseñas por etiqueta",
+  "tag": "section",
+  "settings": [
+    { "type": "text", "id": "anchor", "label": "ID de ancla" },
+    { "type": "text", "id": "heading", "label": "Título (opcional)" },
+    { "type": "text", "id": "subtitle", "label": "Texto bajo las pestañas", "default": "Don't just take our word for it. Here's what actual customers are saying." },
+    { "type": "paragraph", "content": "Lee reviews.csv de Contenido > Archivos. Añade al CSV una columna «tags» con las etiquetas de cada reseña (varias separadas por | o ;). Las pestañas se definen con bloques; sin bloques se crean solas a partir de las etiquetas del CSV." },
+    { "type": "text", "id": "csv_url", "label": "URL del CSV (opcional)", "info": "Vacío: usa reviews.csv de Contenido > Archivos. Un nombre suelto (ej. otro.csv) se busca en Contenido > Archivos. Una dirección completa (https://...) se usa tal cual." },
+    { "type": "header", "content": "Pestañas" },
+    { "type": "checkbox", "id": "show_all_tab", "label": "Añadir una pestaña con todas las reseñas", "default": false },
+    { "type": "text", "id": "all_tab_label", "label": "Nombre de esa pestaña", "default": "All" },
+    { "type": "header", "content": "Reseñas" },
+    { "type": "range", "id": "reviews_per_tab", "label": "Reseñas por pestaña", "min": 3, "max": 12, "step": 3, "default": 3, "info": "Si hay más, aparece el botón para ver más." },
+    { "type": "text", "id": "show_more_label", "label": "Texto del botón «ver más»", "default": "Show more reviews" },
+    { "type": "range", "id": "max_reviews", "label": "Máximo de reseñas leídas del CSV", "min": 12, "max": 240, "step": 6, "default": 120, "info": "Se usan las más recientes." },
+    { "type": "checkbox", "id": "show_dates", "label": "Mostrar fechas", "default": false },
+    { "type": "checkbox", "id": "show_verified", "label": "Mostrar insignia de compra verificada", "default": true, "info": "Solo en las filas con verified = true." },
+    { "type": "text", "id": "verified_label", "label": "Etiqueta de verificado", "default": "Verified Buyer" },
+    { "type": "text", "id": "unverified_label", "label": "Etiqueta para reseñas no verificadas", "info": "Opcional, por ejemplo «Supplier review». Se muestra en las filas con verified = false." },
+    { "type": "text", "id": "read_more", "label": "Texto de «Leer más»", "default": "Read more" },
+    { "type": "text", "id": "read_less", "label": "Texto de «Leer menos»", "default": "Read less" },
+    { "type": "text", "id": "empty_text", "label": "Texto si una pestaña no tiene reseñas", "default": "No reviews for this topic yet." },
+    { "type": "header", "content": "Apariencia" },
+    { "type": "color", "id": "star_color", "label": "Color de las estrellas", "default": "#F2A33A" },
+    { "type": "color", "id": "accent_color", "label": "Color de las pestañas", "info": "Vacío: el oscuro de la marca." },
+    { "type": "color", "id": "card_bg", "label": "Fondo de las tarjetas", "info": "Vacío: blanco." },
+    { "type": "color", "id": "bg_color", "label": "Fondo de la sección", "info": "Vacío: el papel de marca." },
+    { "type": "range", "id": "pad_top", "label": "Espaciado superior", "min": 0, "max": 180, "step": 4, "unit": "px", "default": 64 },
+    { "type": "range", "id": "pad_bottom", "label": "Espaciado inferior", "min": 0, "max": 180, "step": 4, "unit": "px", "default": 64 }
+  ],
+  "blocks": [
+    {
+      "type": "tab",
+      "name": "Pestaña",
+      "settings": [
+        { "type": "text", "id": "label", "label": "Texto de la pestaña", "default": "Better Sleep" },
+        { "type": "text", "id": "tag", "label": "Etiqueta del CSV", "info": "Valor de la columna «tags» que debe llevar la reseña. Vacío: el mismo que el texto. No distingue mayúsculas ni acentos." }
+      ]
+    }
+  ],
+  "enabled_on": { "templates": ["product"] },
+  "presets": [
+    {
+      "name": "Reseñas por etiqueta",
+      "blocks": [
+        { "type": "tab", "settings": { "label": "Better Sleep" } },
+        { "type": "tab", "settings": { "label": "Neck Relief" } },
+        { "type": "tab", "settings": { "label": "Vs Standard Pillows" } },
+        { "type": "tab", "settings": { "label": "Back Sleeper" } },
+        { "type": "tab", "settings": { "label": "Side Sleeper" } }
+      ]
+    }
+  ]
+}
+{% endschema %}
