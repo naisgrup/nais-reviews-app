@@ -1,0 +1,72 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "type": "header",
+  "name": "Header group",
+  "sections": {
+    "announcement": {
+      "type": "deload-announcement",
+      "blocks": {
+        "a1": { "type": "item", "settings": { "text": "Four-zone memory foam contour", "link": "" } },
+        "a2": { "type": "item", "settings": { "text": "Machine-washable cover", "link": "" } },
+        "a3": { "type": "item", "settings": { "text": "Secure checkout", "link": "" } }
+      },
+      "block_order": ["a1", "a2", "a3"],
+      "settings": {}
+    },
+    "header": {
+      "type": "deload-header",
+      "blocks": {
+        "n1": { "type": "nav_link", "settings": { "label": "The pillow", "url": "/products/butterfly-contour-pillow-v2" } },
+        "n2": { "type": "nav_link", "settings": { "label": "Sleep zones", "url": "/#anatomy" } },
+        "n3": { "type": "nav_link", "settings": { "label": "FAQ", "url": "/#faq" } }
+      },
+      "block_order": ["n1", "n2", "n3"],
+      "settings": {
+        "logo_style": "image",
+        "logo_height": 44,
+        "logo_color": "#2B2622",
+        "logo_color_stuck": "#2B2622",
+        "logo_text": "Silkalia",
+        "logo_url": "/",
+        "shop_label": "Shop",
+        "shop_url": "/products/butterfly-contour-pillow-v2",
+        "icon_dim": 80,
+        "show_account": true,
+        "account_mobile": false,
+        "show_cart": true,
+        "cart_icon": "cart",
+        "enable_mobile_menu": true,
+        "logo_image": "shopify://shop_images/silkalia-logo-hilo.png"
+      }
+    },
+    "review_ticker": {
+      "type": "deload-review-ticker",
+      "blocks": {
+        "r1": { "type": "review", "settings": { "quote": "[PLACEHOLDER] Real customer quote 1", "name": "[PLACEHOLDER] Name", "city": "City", "verified": true } },
+        "r2": { "type": "review", "settings": { "quote": "[PLACEHOLDER] Real customer quote 2", "name": "[PLACEHOLDER] Name", "city": "City", "verified": true } },
+        "r3": { "type": "review", "settings": { "quote": "[PLACEHOLDER] Real customer quote 3", "name": "[PLACEHOLDER] Name", "city": "City", "verified": true } }
+      },
+      "block_order": ["r1", "r2", "r3"],
+      "settings": {
+        "enabled": false,
+        "interval": 5,
+        "link": "#reviews",
+        "verified_label": "Verified Buyer",
+        "stars_label": "5 out of 5 stars",
+        "region_label": "Customer reviews",
+        "bg_color": "#F4EDE3",
+        "text_color": "#2B2622",
+        "accent_color": "#B08D57"
+      }
+    }
+  },
+  "order": ["announcement", "header", "review_ticker"]
+}
