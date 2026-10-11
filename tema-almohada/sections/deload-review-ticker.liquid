@@ -1,7 +1,7 @@
 {%- comment -%}
   Base — Mini reseñas rotativas. Banda fina de ancho completo bajo la cabecera, en todas las
-  páginas (se inserta en sections/header-group.json). Rota entre las reseñas con un fundido,
-  se pausa con el ratón y respeta prefers-reduced-motion. Todo el texto es editable.
+  páginas (se inserta en sections/header-group.json). En escritorio muestra 3 reseñas en columnas (si hay más,
+  rota de 3 en 3 con fundido); en móvil, 1 que desliza en lateral. Se pausa con el ratón y respeta prefers-reduced-motion. Todo el texto es editable.
 
   Regla de contenido: solo muestra reseñas reales de clientes. Está DESACTIVADA por defecto y
   los bloques que empiezan por [PLACEHOLDER] no se muestran en la tienda (solo en el editor,
@@ -43,47 +43,59 @@
       echo '</div>'
     endfor
   endcapture
+  assign cols = n
+  if cols > 3
+    assign cols = 3
+  endif
 -%}
 {%- if section.settings.enabled and n > 0 -%}
   {%- style -%}
     #shopify-section-{{ section.id }} .rt{
-      --rt-bg:{{ section.settings.bg_color }};--rt-ink:{{ section.settings.text_color }};--rt-accent:{{ section.settings.accent_color }};
+      --rt-bg:{{ section.settings.bg_color }};--rt-ink:{{ section.settings.text_color }};--rt-accent:{{ section.settings.accent_color }};--rt-cols:{{ cols }};
       background:var(--rt-bg);color:var(--rt-ink);border-bottom:1px solid var(--dl-line, rgba(43,38,34,.12));position:relative;z-index:1
     }
     #shopify-section-{{ section.id }} .rt__band{display:block;color:inherit;text-decoration:none;padding:6px var(--dl-gutter, 16px)}
     #shopify-section-{{ section.id }} .rt__band.is-link{cursor:pointer}
     #shopify-section-{{ section.id }} .rt__band:focus-visible{outline:2px solid var(--rt-accent);outline-offset:-3px}
-    #shopify-section-{{ section.id }} .rt__stack{display:grid;max-width:var(--dl-maxw, 1180px);margin:0 auto}
+    #shopify-section-{{ section.id }} .rt__stack{max-width:1400px;margin:0 auto;overflow:hidden}
+    /* Móvil: una reseña a la vez, desliza en lateral. */
+    #shopify-section-{{ section.id }} .rt__track{display:flex;transition:transform .6s ease,opacity .3s ease}
+    #shopify-section-{{ section.id }} .rt__track.is-fade{opacity:0}
     #shopify-section-{{ section.id }} .rt__slide{
-      grid-area:1/1;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;column-gap:.7em;row-gap:0;
-      text-align:center;font-family:var(--dl-sans, inherit);font-size:13.5px;line-height:1.2;
-      opacity:0;visibility:hidden;transition:opacity .6s ease,visibility 0s linear .6s
+      flex:0 0 100%;min-width:0;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;row-gap:2px;
+      text-align:center;font-family:var(--dl-sans, inherit);font-size:12.5px;line-height:1.2;padding:0 4px
     }
-    #shopify-section-{{ section.id }} .rt__slide.is-on{opacity:1;visibility:visible;transition:opacity .6s ease,visibility 0s}
-    #shopify-section-{{ section.id }} .rt__stars{color:var(--rt-accent);letter-spacing:.08em;font-size:13px;white-space:nowrap}
-    #shopify-section-{{ section.id }} .rt__quote{font-style:italic;quotes:"\201C" "\201D";font-weight:500}
+    #shopify-section-{{ section.id }} .rt__stars{color:var(--rt-accent);letter-spacing:.08em;font-size:13px;white-space:nowrap;display:none}
+    #shopify-section-{{ section.id }} .rt__quote{order:1;font-style:italic;quotes:"\201C" "\201D";font-weight:500;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
     #shopify-section-{{ section.id }} .rt__quote::before{content:open-quote}
     #shopify-section-{{ section.id }} .rt__quote::after{content:close-quote}
-    #shopify-section-{{ section.id }} .rt__by{display:inline-flex;align-items:center;gap:.4em;font-size:12px;font-weight:600;letter-spacing:.01em;opacity:.85;white-space:nowrap}
+    #shopify-section-{{ section.id }} .rt__by{order:3;display:inline-flex;align-items:center;gap:.4em;font-size:11.5px;font-weight:600;letter-spacing:.01em;opacity:.9;white-space:nowrap}
+    #shopify-section-{{ section.id }} .rt__by::before{content:"★★★★★";color:var(--rt-accent);letter-spacing:.06em;font-size:11px;margin-right:.35em;font-weight:400}
     #shopify-section-{{ section.id }} .rt__name::before{content:"\2014\00a0"}
     #shopify-section-{{ section.id }} .rt__vf{width:13px;height:13px;flex:none;color:var(--rt-accent)}
     #shopify-section-{{ section.id }} .rt__sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
     @media (max-width:749px){
       #shopify-section-{{ section.id }} .rt__band{padding:4px var(--dl-gutter, 16px)}
-      #shopify-section-{{ section.id }} .rt__slide{flex-direction:column;flex-wrap:nowrap;row-gap:2px;font-size:12.5px;line-height:1.2}
-      #shopify-section-{{ section.id }} .rt__stars{order:2;display:none}
-      #shopify-section-{{ section.id }} .rt__quote{order:1;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
-      #shopify-section-{{ section.id }} .rt__by{order:3;font-size:11.5px}
-      #shopify-section-{{ section.id }} .rt__by::before{content:"★★★★★";color:var(--rt-accent);letter-spacing:.06em;font-size:11px;margin-right:.35em;font-weight:400}
+    }
+    /* Escritorio: hasta 3 reseñas en columnas, separadas por una línea fina. */
+    @media (min-width:750px){
+      #shopify-section-{{ section.id }} .rt__track{display:grid;grid-template-columns:repeat(var(--rt-cols),minmax(0,1fr));transform:none !important}
+      #shopify-section-{{ section.id }} .rt__slide{flex-direction:row;flex-wrap:wrap;align-content:center;column-gap:.6em;font-size:13px;padding:0 18px}
+      #shopify-section-{{ section.id }} .rt__slide.is-off{display:none}
+      #shopify-section-{{ section.id }} .rt__slide:not(.is-first){border-left:1px solid color-mix(in srgb,var(--rt-ink) 22%,transparent)}
+      #shopify-section-{{ section.id }} .rt__stars{display:inline;order:0}
+      #shopify-section-{{ section.id }} .rt__quote{display:block;-webkit-line-clamp:unset;overflow:visible}
+      #shopify-section-{{ section.id }} .rt__by{flex-basis:100%;justify-content:center;font-size:11.5px}
+      #shopify-section-{{ section.id }} .rt__by::before{content:none}
     }
     @media (prefers-reduced-motion:reduce){
-      #shopify-section-{{ section.id }} .rt__slide,#shopify-section-{{ section.id }} .rt__slide.is-on{transition:none}
+      #shopify-section-{{ section.id }} .rt__track{transition:none}
     }
   {%- endstyle -%}
 
   <div class="rt" data-rt data-interval="{{ section.settings.interval }}" role="region" aria-label="{{ section.settings.region_label | escape }}">
     <a class="rt__band" data-rt-band href="{{ link | default: '#' | escape }}">
-      <div class="rt__stack">{{ slides }}</div>
+      <div class="rt__stack"><div class="rt__track" data-rt-track>{{ slides }}</div></div>
     </a>
   </div>
 
@@ -93,32 +105,53 @@
       if (!root || root.__rt) return;
       root.__rt = true;
       var slides = [].slice.call(root.querySelectorAll('[data-rt-slide]'));
+      var track = root.querySelector('[data-rt-track]');
       var band = root.querySelector('[data-rt-band]');
       var cur = 0, timer = null, hover = false;
       var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var wide = window.matchMedia('(min-width: 750px)');
       var every = Math.max(2, parseInt(root.getAttribute('data-interval'), 10) || 5) * 1000;
 
-      function show(i) {
-        cur = (i + slides.length) % slides.length;
-        slides.forEach(function (s, k) { s.classList.toggle('is-on', k === cur); s.setAttribute('aria-hidden', k === cur ? 'false' : 'true'); });
+      /* Escritorio: 3 reseñas por vista (páginas de 3). Móvil: 1 por vista, desliza en lateral. */
+      function perView() { return wide.matches ? 3 : 1; }
+      function count() { return Math.ceil(slides.length / perView()); }
+      function render() {
+        var pv = perView();
+        cur = ((cur % count()) + count()) % count();
+        slides.forEach(function (s, i) {
+          var on = Math.floor(i / pv) === cur;
+          s.classList.toggle('is-off', pv === 3 && !on);
+          s.classList.toggle('is-first', pv === 3 && i % 3 === 0);
+          s.setAttribute('aria-hidden', on ? 'false' : 'true');
+        });
+        track.style.transform = pv === 1 ? 'translateX(' + (-100 * cur) + '%)' : '';
+      }
+      function go(i) {
+        if (wide.matches && !reduce && count() > 1 && i !== cur) {
+          track.classList.add('is-fade');
+          setTimeout(function () { cur = i; render(); track.classList.remove('is-fade'); }, 300);
+        } else { cur = i; render(); }
       }
       function stop() { if (timer) { clearInterval(timer); timer = null; } }
       function start() {
         stop();
-        if (reduce || slides.length < 2 || hover || document.hidden) return;
-        timer = setInterval(function () { show(cur + 1); }, every);
+        if (reduce || count() < 2 || hover || document.hidden) return;
+        timer = setInterval(function () { go((cur + 1) % count()); }, every);
       }
-      show(0);
+      render();
+      var onWide = function () { cur = 0; render(); start(); };
+      if (wide.addEventListener) wide.addEventListener('change', onWide); else if (wide.addListener) wide.addListener(onWide);
       root.addEventListener('mouseenter', function () { hover = true; stop(); });
       root.addEventListener('mouseleave', function () { hover = false; start(); });
       root.addEventListener('focusin', function () { hover = true; stop(); });
       root.addEventListener('focusout', function () { hover = false; start(); });
       document.addEventListener('visibilitychange', function () { document.hidden ? stop() : start(); });
-      /* En el editor, al seleccionar un bloque se muestra esa reseña. */
-      root.closest('.shopify-section').addEventListener('shopify:block:select', function (e) {
-        var k = slides.indexOf(e.target); if (k > -1) { hover = true; stop(); show(k); }
+      /* En el editor, al seleccionar un bloque se muestra su reseña. */
+      var wrap = root.closest('.shopify-section');
+      wrap.addEventListener('shopify:block:select', function (e) {
+        var k = slides.indexOf(e.target); if (k > -1) { hover = true; stop(); cur = Math.floor(k / perView()); render(); }
       });
-      root.closest('.shopify-section').addEventListener('shopify:block:deselect', function () { hover = false; start(); });
+      wrap.addEventListener('shopify:block:deselect', function () { hover = false; start(); });
 
       /* Enlace: #ancla con scroll suave si existe en la página (se busca cuando el documento ya
          está cargado, porque esta banda va antes del contenido); si no existe, no es un enlace. */
@@ -163,7 +196,7 @@
       "type": "review",
       "name": "Reseña",
       "settings": [
-        { "type": "text", "id": "quote", "label": "Frase corta", "info": "Máximo ~70 caracteres, sin comillas (se añaden solas)." },
+        { "type": "text", "id": "quote", "label": "Frase corta", "info": "Máximo ~55 caracteres, sin comillas (se añaden solas). En escritorio se ven 3 a la vez." },
         { "type": "text", "id": "name", "label": "Nombre del cliente (ej. Amanda L.)" },
         { "type": "text", "id": "city", "label": "Ciudad" },
         { "type": "checkbox", "id": "verified", "label": "Comprador verificado", "default": true }
